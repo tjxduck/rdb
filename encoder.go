@@ -42,7 +42,10 @@ func (e *Encoder) EncodeDumpFooter() error {
 }
 
 func (e *Encoder) EncodeDatabase(n int) error {
-	e.w.Write([]byte{rdbFlagSelectDB})
+	_, err := e.w.Write([]byte{rdbFlagSelectDB})
+	if err != nil {
+		return err
+	}
 	return e.EncodeLength(uint32(n))
 }
 
@@ -52,6 +55,18 @@ func (e *Encoder) EncodeExpiry(expiry uint64) error {
 	binary.LittleEndian.PutUint64(b[1:], expiry)
 	_, err := e.w.Write(b)
 	return err
+}
+
+func (e *Encoder) EncodeAux(k, v []byte) error {
+	_, err := e.w.Write([]byte{rdbFlagAux})
+	if err != nil {
+		return err
+	}
+	err = e.EncodeString(k)
+	if err != nil {
+		return err
+	}
+	return e.EncodeString(v)
 }
 
 func (e *Encoder) EncodeType(v ValueType) error {
